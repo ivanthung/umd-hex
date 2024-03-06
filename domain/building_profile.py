@@ -33,6 +33,12 @@ class BuildingProfile:
             "building_sub_type": self.building_sub_type,
             "impact_m2": self.impact_m2['CO2'],
         }
+    
+    def validate(self):
+        """Validates the building profile. Improve this function"""
+        if self.building_type and self.building_sub_type and self.impact_m2:
+            return True
+        return False
 
     def initiate_material_data_port(self, material_data_port: MaterialDataPort):
         """Initializes the material data port for the building profile."""

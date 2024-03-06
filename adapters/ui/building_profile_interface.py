@@ -19,8 +19,11 @@ class StreamlitBuildingProfileInterface(BuildingProfileInterface):
                 building_profile.building_type = st.text_input("Building Type", building_profile.building_type, key = str(i)+"type")
                 building_profile.building_sub_type = st.text_input("Building Sub Type", building_profile.building_sub_type, key = str(i)+"sub_type")
                 building_profile.impact_m2['CO2'] = st.number_input("Impact m2", value=building_profile.impact_m2['CO2'], key = str(i)+"impact")
-                # update the building profile in the dataframe here
-                building_profiles.loc[i] = building_profile.to_dict()
+                if building_profile.validate():
+                    building_profiles.loc[i] = building_profile.to_dict()
+                else:
+                    st.error("Invalid profile")
+
         
         return building_profiles
 
