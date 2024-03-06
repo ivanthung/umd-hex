@@ -18,6 +18,7 @@ col1, col2 = st.columns(2)
 with col1:
     building_profiles = profile_interface.create_edit_interface(building_profiles)
     profile_interface.save_to_cache(BUILDING_PROFILES, building_profiles)
+    profile_interface.create_pretty_display(building_profiles)
 
 with col2:
     profile_interface.create_save_interface(building_profiles, xls_adapter)

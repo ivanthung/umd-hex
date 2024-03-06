@@ -26,6 +26,13 @@ class BuildingProfile:
 
     def describe(self):
         return f"{self.building_type}: {self.impact_m2['CO2']}"
+    
+    def to_dict(self):
+        return {
+            "building_type": self.building_type,
+            "building_sub_type": self.building_sub_type,
+            "impact_m2": self.impact_m2['CO2'],
+        }
 
     def initiate_material_data_port(self, material_data_port: MaterialDataPort):
         """Initializes the material data port for the building profile."""
@@ -39,6 +46,7 @@ class BuildingProfile:
                 self.name
             )
         pass
+
 
     def update_impact_m2(self):
         """Creates a new bill of materials for the building profile based on the bill of products.

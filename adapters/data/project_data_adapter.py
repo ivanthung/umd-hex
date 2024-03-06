@@ -14,7 +14,7 @@ class BAGProjectAdapter(ProjectDataPort):
     def __init__(self, file_path):
         self.file_path = file_path
 
-    def load_project_data(self) -> list[BuildingProject]:
+    def load_project_data(self) -> gpd.GeoDataFrame:
         """ Load data from an excel file and return a list of building profiles."""
         try:
             gdf_bag = gpd.read_file(self.file_path)
@@ -25,32 +25,17 @@ class BAGProjectAdapter(ProjectDataPort):
             gdf_bag["use"] = np.random.choice(
                 ["Apartment", "Office", "Low-Rise"], size=len(gdf_bag)
             )
-
-            project_data = []
-            for _, row in gdf_bag.iterrows():
-                project_data.append(
-                    BuildingProject(
-                        {
-                            "address": row["buurt_naam"],
-                            "current_type": row["use"],
-                            "transformation": row["transform"],
-                            "age": int(row["bouwjaar"]),
-                            "shape": row["geometry"],
-                        }
-                    )
-                )
-            
-            return project_data
+            return gdf_bag
 
         except FileNotFoundError:
             print("File not found")
 
-    def save_to_cache(self, cache_name: str, project_data: list[BuildingProject]):
+    def save_to_cache(self, cache_name: str, project_data: gpd.GeoDataFrame):
         """ Save building profiles to cache."""
         st.session_state[cache_name] = project_data
         print("Saved profile to cache")
 
-    def save_project_data(self, project_data: list[BuildingProject]):
+    def save_project_data(self, project_data: gpd.GeoDataFrame):
         """ Save a list of building profiles to an excel file."""
         pass
         

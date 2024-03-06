@@ -9,36 +9,18 @@ class XLSBuildingProfileDataAdapter(BuildingDataPort):
     def __init__(self, file_path):
         self.file_path = file_path
 
-    def load_building_profiles(self) -> list[BuildingProfile]:
-        """ Load data from an excel file and return a list of building profiles."""
-        building_profiles = []
-        data = pd.read_excel(self.file_path)
-        for i, row in data.iterrows():
-            building_profiles.append(
-                BuildingProfile(
-                    {
-                        "name": row["building_type"],
-                        "building_type": row["building_type"],
-                        "building_sub_type": row["building_sub_type"],
-                        "impact_m2": int(row["impact_m2"]),
-                    }
-                )
-            )
+    def load_building_profiles(self) -> pd.DataFrame:
+        """ Load data from an excel file and return a list of building profiles."
+        Potentially add validatin here. """
+
+        building_profiles = pd.read_excel(self.file_path)
         
         return building_profiles
     
-    def save_building_profiles(self, building_profiles: list[BuildingProfile]):
+    
+    
+    def save_building_profiles(self, building_profiles: pd.DataFrame):
         """ Save a list of building profiles to an excel file."""
-        building_profiles_df = pd.DataFrame(
-            [
-                {
-                    "building_type": profile.building_type,
-                    "building_sub_type": profile.building_sub_type,
-                    "impact_m2": profile.impact_m2['CO2'],
-                }
-                for profile in building_profiles
-            ]
-        )
-        print(building_profiles_df)
-        building_profiles_df.to_excel(self.file_path, index=False)
+        
+        building_profiles.to_excel(self.file_path, index=False)
 
