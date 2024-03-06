@@ -1,5 +1,6 @@
 from domain.building_profile import BuildingProfile
 from numpy import NaN
+from enum import Enum, auto
 
 class BuildingProject:
     def __init__(self, init_data: dict):
@@ -19,7 +20,7 @@ class BuildingProject:
     def describe(self):
         return f"Building project at {self.address} with current type {self.current_profile_type} and future type {self.future_profile_type}."
     
-    def update_profile_type(self, new_profile_type: BuildingProfile):
+    def update_profile_type(self, new_profile_type):
         """Updates the building type of the building project."""
         new_profile_type
       
@@ -30,3 +31,7 @@ class BuildingProject:
     def update_transformation(self, new_transformation: str):
         """Updates the transformation of the building project"""
         self.transformation = new_transformation
+
+class Resource(Enum):
+    BuildingProject = auto()
+    BuildingProfile = auto()

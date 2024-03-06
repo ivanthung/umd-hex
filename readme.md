@@ -3,13 +3,18 @@ Running:
 pip install -r requirements.txt
 streamlit run app.py
 
+ToDo:
+* Make the editing thing a little bit prettier.
+* Create a map of project data, and an interface to edit it.
+
 
 ## Notes
 Experimenting with hexagonal architecture for building profiles in a Python Streamlit app.
 
 ToDo next:
-- Create dummy data to load standard data from a google sheets.
-- Create a full-flow to display building profiles loaded from sheets, with a Streamlit UI Adapter.
+- Create cache handeling on app-level.
+- Implement a map display function.
+- Implement a change type UI.
 
 
 ## Each project has:
