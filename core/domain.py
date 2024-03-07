@@ -3,6 +3,12 @@ from enum import Enum, auto
 from shapely.geometry import Polygon
 from typing import Optional
 
+class Resource(Enum):
+    BuildingProject = auto()
+    BuildingProfile = auto()
+    ConstructionProducts = auto()
+    MaterialImpacts = auto()
+
 @dataclass
 class BuildingProfile:
     """Data class to hold building profile data."""
@@ -47,8 +53,21 @@ class MaterialImpacts:
     impact_m2: dict
     impact_all: dict
 
-class Resource(Enum):
-    BuildingProject = auto()
-    BuildingProfile = auto()
-    ConstructionProducts = auto()
-    MaterialImpacts = auto()
+
+@dataclass
+class GeoConfig:
+    location: tuple[float, float]
+    zoom: int
+    tiles: str
+    popup_fields: list[str]
+
+@dataclass
+class FieldsEditConfig:
+    fixed: list[str]
+    variable: list[str]
+
+@dataclass
+class MapConfig:
+    geo: GeoConfig
+    fields_edit: FieldsEditConfig
+

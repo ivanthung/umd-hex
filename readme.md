@@ -4,7 +4,8 @@ pip install -r requirements.txt
 streamlit run app.py
 
 ToDo:
-* Make the editing thing a little bit prettier.
+* Make the editing thing a little bit prettier ->
+* Fix a weird session state bug.
 * Create a map of project data, and an interface to edit it.
 
 

@@ -40,24 +40,25 @@ class BuildingDataRepositoryXls(ports.BuildingDataRepository):
         self.save(domain.Resource.BuildingProfile, _temp)
 
 
-    def save(self, resource: domain.Resource.BuildingProject, data: pd.DataFrame | gpd.GeoDataFrame):
+    def save(self, resource: domain.Resource, data: pd.DataFrame | gpd.GeoDataFrame, to_file: bool):
         """ Save a list of building profiles to an excel file."""
-        try:
-            match resource:
-                case domain.Resource.BuildingProject:
-                    data.to_file(self.filepath[str(resource)], index=False)
-                
-                case domain.Resource.BuildingProfile:
-                    data.to_excel(self.filepath[str(resource)], index=False)
+        if to_file:
+            try:
+                match resource:
+                    case domain.Resource.BuildingProject:
+                        data.to_file(self.filepath[str(resource)], index=False)
+                    
+                    case domain.Resource.BuildingProfile:
+                        data.to_excel(self.filepath[str(resource)], index=False)
+            
+            except FileNotFoundError:
+                print("File not found")
+                return False
+            
+            except Exception as e:
+                print(e)
+                return False
+            print("Saved to: ", self.filepath[str(resource)])
         
-        except FileNotFoundError:
-            print("File not found")
-            return False
-        
-        except Exception as e:
-            print(e)
-            return False
-        
-        print("Saved to: ", self.filepath[str(resource)])
         self.cached_data[str(resource)] = data
         return True

@@ -38,7 +38,7 @@ class Service(ABC):
         """Get building data from the repository."""
     
     @abstractmethod
-    def save(self, resource: domain.Resource) -> bool:
+    def save(self, resource: domain.Resource, to_file: bool) -> bool:
         """Save a list of building profiles."""
 
 
@@ -46,13 +46,14 @@ class BuildingProfileInterface(ABC):
     """ Streamlit implementation of the building profile interface. Each method loads the building profiles from the cache if it exist."""
 
     @abstractmethod
-    def create_edit_interface(self, building_profiles: pd.DataFrame) -> pd.DataFrame:
+    def edit_profile(self) -> pd.DataFrame:
         pass
     
     @abstractmethod
-    def create_pretty_display(self, building_profiles: pd.DataFrame) -> pd.DataFrame:
+    def pretty_display(self, resource: domain.Resource) -> pd.DataFrame:
         pass
     
     @abstractmethod
-    def create_save_interface(self, building_profiles: pd.DataFrame) -> pd.DataFrame:
-        pass
+    def map(self) -> None:
+        """ Shows map of project data"""
+    

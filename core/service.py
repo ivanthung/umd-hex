@@ -1,5 +1,6 @@
 from core import domain, ports
 import pandas as pd
+import geopandas as gpd
 
 class Service(ports.Service):    
     def __init__(self, building_data_repository: ports.BuildingDataRepository):
@@ -17,6 +18,6 @@ class Service(ports.Service):
         """Validate a building profile."""
         return True
     
-    def save(self, building_profiles: pd.DataFrame):
+    def save(self, resource: domain.Resource, data: pd.DataFrame | gpd.GeoDataFrame, to_file = False):
         """Save a list of building profiles."""
-        return self.building_data_repository.save(domain.Resource.BuildingProfile, building_profiles)
+        return self.building_data_repository.save(resource, data, to_file)

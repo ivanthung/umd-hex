@@ -15,7 +15,7 @@ def load_service():
     if 'service' not in session:
         building_repository = building_data_repository_xls.BuildingDataRepositoryXls(
         [building_data_repository_xls.PersistedData(filepath = DATA_DIR / "gebouwprofielen.xlsx", resource = domain.Resource.BuildingProfile),
-        # building_data_repository_xls.PersistedData(filepath = DATA_DIR / "bag" / "bag-ams-zuidoost-platdak-buurt.shp", resource = domain.Resource.BuildingProject)
+        building_data_repository_xls.PersistedData(filepath = DATA_DIR / "bag" / "bag-ams-zuidoost-platdak-buurt.shp", resource = domain.Resource.BuildingProject)
         ]
         )
         session.service = service.Service(building_repository)
