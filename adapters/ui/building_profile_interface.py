@@ -1,49 +1,96 @@
 import streamlit as st
+import pandas as pd
+import geopandas as gpd
+from copy import deepcopy
+from core import ports, domain
+from utils import project_config
+import folium
+from streamlit_folium import st_folium
 
-from ports.ui.building_profile_interface import BuildingProfileInterface
-from ports.building_data import BuildingDataPort
-from domain.building_profile import BuildingProfile
-from utils.session_state_names import BUILDING_PROFILES
-
-class StreamlitBuildingProfileInterface(BuildingProfileInterface):
+class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
     """ Streamlit implementation of the building profile interface. Each method loads the building profiles from the cache if it exist."""
+    def __init__(self, service: ports.Service):
+        self.service = service
 
-    def create_edit_interface(self, building_profiles) -> list[BuildingProfile]:
-        building_profiles = self.load_from_cache(BUILDING_PROFILES, building_profiles)
+    def edit_profile(self, columns = {}) -> pd.DataFrame:
+        """Edit data with a simple interface. Atm only edits impact m2.
+        We could give it a dict to determine what columns to edit.
+        Perhaps make this more general later"""
         
-        for i, profile in enumerate(building_profiles):
-            
-            with st.expander(profile.building_type + " " + profile.building_sub_type):
-                profile.building_type = st.text_input("Building Type", profile.building_type, key = str(i)+"type")
-                profile.building_sub_type = st.text_input("Building Sub Type", profile.building_sub_type, key = str(i)+"sub_type")
-                profile.impact_m2['CO2'] = st.number_input("Impact m2", value=profile.impact_m2['CO2'], key = str(i)+"impact")
-        
-        return building_profiles
+        save_button = st.container()
+        building_profiles = self.service.get_building_data(domain.Resource.BuildingProfileSummary)
 
-    def create_pretty_display(self, building_profiles):
+        # Expanders for each building type
+        for building_type in building_profiles.building_type.unique():
+            with st.expander(building_type):
+
+                for  i, profile in building_profiles[building_profiles['building_type'] == building_type].iterrows():
+                    building_profile = domain.BuildingProfileSummary(**profile.to_dict())
+                    key = f"{i}-impact"
+                    col1, col2 = st.columns((1,2))
+                    col1.write(building_profile.building_sub_type)                                
+                    building_profile.impact_m2 = col2.number_input("Impact m2", value=building_profile.impact_m2, key = key)
+                    
+                    if(self.service.validate_profile(building_profile)):
+                        building_profiles.loc[i] = building_profile.to_dict()
+                        self.service.save(domain.Resource.BuildingProfileSummary, building_profiles)
+        
+        if save_button.button("Save"):
+            if(self.service.save(domain.Resource.BuildingProfileSummary, building_profiles, to_file=True)):
+                save_button.success("Building profiles saved")
+
+    def pretty_display(self, resource: domain.Resource) -> pd.DataFrame:
         """ Display building profiles."""
-        building_profiles = self.load_from_cache(BUILDING_PROFILES, building_profiles)
-    
-        for profile in building_profiles:
-            st.write(profile.describe())
-    
-    def create_save_interface(self, building_profiles: list[BuildingProfile], data_port: BuildingDataPort):
-        """ Interface to save building profiles to a data port."""
-        building_profiles = self.load_from_cache(BUILDING_PROFILES, building_profiles)
         
-        if st.button("Save building profile"):
-            data_port.save_building_profiles(building_profiles)
-            st.write("Saved building profiles to xls")
-            print(self.create_profile_pretty_display(building_profiles))
+        local_data = self.service.get_building_data(resource)
+        st.write(local_data.head())
     
-    def save_to_cache(self, cache_name: str, building_profiles: list[BuildingProfile]):
-        """ Save building profiles to cache."""
-        st.session_state[cache_name] = building_profiles
-        print("Saved profile to cache")
-    
-    def load_from_cache(self, cache_name: str, building_profiles: list[BuildingProfile]):
-        """ Load building profiles from session state cache, if it exists."""
-        if cache_name in st.session_state:
-            return st.session_state[cache_name]
-        else:
-            return building_profiles
+    def editable_table(self, resource: domain.Resource, columns: domain.FieldsEditConfig):
+        """ Editable table for profiles and projects.
+        Include column config to determine which ones to show and which one to edit.
+        """
+        col1, col2 = st.columns(2)
+
+        df = deepcopy(self.service.get_building_data(str(resource)))
+        all_columns = columns.fixed+columns.variable
+
+        match resource:
+            case domain.Resource.BuildingProject:
+
+                # Completely stupid implementation of the column config. ToDo: column_config generator.                
+                # Also, doesn't work yet for the BuildingProfiles.
+                
+                profile_data = self.service.get_building_data(str(domain.Resource.BuildingProfileSummary))
+                options = profile_data['building_type'].unique()
+                column_config =  {
+                    field: st.column_config.SelectboxColumn(
+                        options= options,
+                        required=False,
+                    ) for field in columns.variable}
+                       
+        _df = st.data_editor(df[all_columns], column_config=column_config)
+        df[all_columns] = _df
+
+        if col1.button("Save changes to file"):
+            if(self.service.save(resource, df, to_file=True)):
+                col2.success(f"{resource} saved")
+
+    @st.cache_data(experimental_allow_widgets=True)
+    def map(_self, resource: domain.Resource, _map_config: domain.MapConfig):
+        """ Shows map of project data"""
+        
+        match resource: 
+            case domain.Resource.BuildingProject:
+                gdf = _self.service.get_building_data(domain.Resource.BuildingProject)
+                gdf = gdf.head(50)
+                m = folium.Map(location = _map_config.geo.location,
+                                zoom_start = _map_config.geo.zoom,
+                                tiles = _map_config.geo.tiles)
+                folium.GeoJson(
+                    gdf,
+                    popup=folium.GeoJsonPopup(
+                        fields=_map_config.geo.popup_fields,
+                    ),
+                ).add_to(m)
+                st_folium(m, use_container_width=True)
+            
