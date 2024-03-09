@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import geopandas as gpd
+from copy import deepcopy
 from core import ports, domain
 from utils import project_config
 import folium
@@ -17,14 +18,14 @@ class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
         Perhaps make this more general later"""
         
         save_button = st.container()
-        building_profiles = self.service.get_building_data(domain.Resource.BuildingProfile)
+        building_profiles = self.service.get_building_data(domain.Resource.BuildingProfileSummary)
 
         # Expanders for each building type
         for building_type in building_profiles.building_type.unique():
             with st.expander(building_type):
 
                 for  i, profile in building_profiles[building_profiles['building_type'] == building_type].iterrows():
-                    building_profile = domain.BuildingProfile(**profile.to_dict())
+                    building_profile = domain.BuildingProfileSummary(**profile.to_dict())
                     key = f"{i}-impact"
                     col1, col2 = st.columns((1,2))
                     col1.write(building_profile.building_sub_type)                                
@@ -32,10 +33,10 @@ class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
                     
                     if(self.service.validate_profile(building_profile)):
                         building_profiles.loc[i] = building_profile.to_dict()
-                        self.service.save(domain.Resource.BuildingProfile, building_profiles)
+                        self.service.save(domain.Resource.BuildingProfileSummary, building_profiles)
         
         if save_button.button("Save"):
-            if(self.service.save(domain.Resource.BuildingProfile, building_profiles, to_file=True)):
+            if(self.service.save(domain.Resource.BuildingProfileSummary, building_profiles, to_file=True)):
                 save_button.success("Building profiles saved")
 
     def pretty_display(self, resource: domain.Resource) -> pd.DataFrame:
@@ -44,6 +45,36 @@ class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
         local_data = self.service.get_building_data(resource)
         st.write(local_data.head())
     
+    def editable_table(self, resource: domain.Resource, columns: domain.FieldsEditConfig):
+        """ Editable table for profiles and projects.
+        Include column config to determine which ones to show and which one to edit.
+        """
+        col1, col2 = st.columns(2)
+
+        df = deepcopy(self.service.get_building_data(str(resource)))
+        all_columns = columns.fixed+columns.variable
+
+        match resource:
+            case domain.Resource.BuildingProject:
+
+                # Completely stupid implementation of the column config. ToDo: column_config generator.                
+                # Also, doesn't work yet for the BuildingProfiles.
+                
+                profile_data = self.service.get_building_data(str(domain.Resource.BuildingProfileSummary))
+                options = profile_data['building_type'].unique()
+                column_config =  {
+                    field: st.column_config.SelectboxColumn(
+                        options= options,
+                        required=False,
+                    ) for field in columns.variable}
+                       
+        _df = st.data_editor(df[all_columns], column_config=column_config)
+        df[all_columns] = _df
+
+        if col1.button("Save changes to file"):
+            if(self.service.save(resource, df, to_file=True)):
+                col2.success(f"{resource} saved")
+
     @st.cache_data(experimental_allow_widgets=True)
     def map(_self, resource: domain.Resource, _map_config: domain.MapConfig):
         """ Shows map of project data"""

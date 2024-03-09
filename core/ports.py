@@ -5,7 +5,8 @@ import pandas as pd
 import geopandas as gpd
 from core import domain
 
-class BuildingDataRepository(ABC):
+
+class DataRepository(ABC):
     @abstractmethod
     def save(self, resource: domain.Resource, data: pd.DataFrame | gpd.GeoDataFrame) -> bool:
         """Save a list of building profiles."""
@@ -15,18 +16,9 @@ class BuildingDataRepository(ABC):
         """ Returns full dataframe"""
 
     @abstractmethod
-    def add_profile(self, profile: pd.DataFrame | gpd.GeoDataFrame):
+    def add_instance(self, resource: domain.Resource, instance) -> bool:
         """ Add a new profile to the repository"""
         pass
-
-class ImpactDataRepository(ABC):
-    @abstractmethod
-    def save(self, resource: domain.Resource, data: pd.DataFrame | gpd.GeoDataFrame) -> bool:
-        """Save a list of building profiles."""
-        
-    @abstractmethod
-    def get_all(self, resource: domain.Resource) -> pd.DataFrame | gpd.GeoDataFrame:
-        """ Returns full dataframe"""
 
 class Service(ABC):
     @abstractmethod

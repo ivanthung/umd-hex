@@ -9,11 +9,10 @@ page.set_page_title("Pas gebouwprofiel aand")
 load_service()
 
 session = st.session_state
-
 interface = StreamlitBuildingProfileInterface(session.service)
 
 col1, col2 = st.columns(2)
 with col1:
     interface.edit_profile()
 with col2:
-    interface.pretty_display(domain.Resource.BuildingProfile)
+    interface.pretty_display(domain.Resource.BuildingProfileSummary)

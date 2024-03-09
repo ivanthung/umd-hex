@@ -9,6 +9,5 @@ project_data = {
         "zoom": 13,
         "tiles": "Cartodb Positron",
         "popup_fields": ["fuuid", "bouwjaar", "gebruiksdo"],},
-    "fields_edit" : {'fixed': ["bouwjaar"], 'variable': ["future_type"]}
+    "fields_edit" : {'fixed': ["bouwjaar", "oppervlakt", "aantal_ver"], 'variable': ["prof_now", "prof_fut"]}
 }
-
