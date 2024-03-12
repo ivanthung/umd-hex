@@ -1,11 +1,12 @@
 """ Streamlit page to edit building profiles. Session state handeling remains on the level of the interface class."""
-
 import streamlit as st
 from app import load_service
 from utils import page_components as page
-from utils import project_config
+from utils import project_config, logger
 from core import domain
 from adapters.ui.building_profile_interface import StreamlitBuildingProfileInterface
+
+logger = logger.get_logger(__name__)
 
 
 page.set_page_title("Laad project data")

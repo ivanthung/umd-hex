@@ -30,9 +30,7 @@ class BuildingDataRepositoryXls(ports.DataRepository):
                 
                 case domain.Resource.BuildingProfileSummary | domain.Resource.BuildingProfile:
                     cached_data[str(data.resource)] = pd.read_excel(data.filepath)
-            
-            
-        
+                    logger.debug(f"Loaded data {data.resource} from {data.filepath}")
         self.cached_data = cached_data
 
     def get_all(self, resource: domain.Resource):
