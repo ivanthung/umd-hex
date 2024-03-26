@@ -4,8 +4,13 @@ from shapely.geometry import Polygon
 from typing import Optional
 
 class Resource(Enum):
+    """Enum to hold all resources with names. Some resources can share the same class."""
+    
     BuildingProject = auto()
-    BuildingProfile = auto()
+    BuildingProfileStandardMaterials = auto()
+    BuildingProfileStandardImpacts = auto()
+    BuildingProfileFutureMaterials = auto()
+    BuildingProfileFutureImpacts = auto()
     BuildingProfileSummary = auto()
     ConstructionProducts = auto()
     MaterialImpacts = auto()
@@ -15,8 +20,10 @@ class Resource(Enum):
         class_mapping = {
             Resource.BuildingProject: BuildingProject,
             Resource.BuildingProfileSummary: BuildingProfileSummary,
-            Resource.ConstructionProducts: ConstructionProducts,
-            Resource.MaterialImpacts: MaterialImpacts
+            Resource.BuildingProfileStandardMaterials: BuildingProfileMaterials,
+            Resource.BuildingProfileStandardImpacts: BuildingProfileImpacts,
+            Resource.BuildingProfileFutureMaterials: BuildingProfileMaterials,
+            Resource.BuildingProfileFutureImpacts: BuildingProfileImpacts
         }
         return class_mapping[resource]
 
@@ -37,7 +44,6 @@ class BuildingProfileSummary:
             "building_sub_type": self.building_sub_type,
             "impact_m2": self.impact_m2
         }
-
     
 @dataclass
 class BuildingProject:
@@ -45,6 +51,7 @@ class BuildingProject:
     use_now: str
     prof_now: str
     prof_fut: str
+    end_use: str
     location: tuple
     geometry: Polygon
     address: str
@@ -54,24 +61,27 @@ class BuildingProject:
         return f"Building project with current type {self.current_profile_type} and future type {self.future_profile_type}."
 
 @dataclass
-class BuildingProfile:
-    """ Placeholders for construction products -> should be replaced with fields"""
-    type: str
-    impact_m2: dict
-    impact_all: dict
+class BuildingProfileMaterials:
+    """ Building profile holding construction materials and their specific impacts."""
+    building_type: str
+    construction_type: str
+    cohort: int
+    productcode: str
+    product_unit: str
+    fase_a_gwp_per_m2: float
+    fase_a_mki_per_m2: float
 
 @dataclass
-class ConstructionProducts:
+class BuildingProfileImpacts:
     """ Placeholders for construction products -> should be replaced with fields"""
-    impact_m2: dict
-    impact_all: dict
-
-@dataclass
-class MaterialImpacts:
-    """ Placeholders for construction products -> should be replaced with fields"""
-    impact_m2: dict
-    impact_all: dict
-
+    building_type: str
+    construction_type: str
+    cohort: int
+    productcode: str
+    product_unit: str
+    genericmaterialname: str
+    grouped_material: str
+    kg_per_m2: float
 
 @dataclass
 class GeoConfig:

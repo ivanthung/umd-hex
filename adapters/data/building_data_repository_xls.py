@@ -18,20 +18,26 @@ class PersistedData:
 class BuildingDataRepositoryXls(ports.DataRepository):
     """ Adapter to load building profiles from an excel file with only very basic data."""
     
-    def __init__(self, local_data: list[PersistedData]):
+    def __init__(self, local_data: list[PersistedData], progress_callback=None):
         cached_data: dict[str, pd.DataFrame | gpd.GeoDataFrame] = dict()
         self.filepath = { str(data.resource): data.filepath for data in local_data }
         
+        total_files = len(local_data)
+        loaded_files = 0
+
         for data in local_data:
             match data.resource:
                 case domain.Resource.BuildingProject:
                     cached_data[str(data.resource)] = gpd.read_file(data.filepath)
                     logger.debug(f"Loaded data {data.resource} from {data.filepath}")
                 
-                case domain.Resource.BuildingProfileSummary | domain.Resource.BuildingProfile:
+                case other:
                     cached_data[str(data.resource)] = pd.read_excel(data.filepath)
-            
-            
+                    logger.debug(f"Loaded data {data.resource} from {data.filepath}")
+        
+            loaded_files += 1
+            if progress_callback:
+                progress_callback(loaded_files, total_files, str(data.resource))
         
         self.cached_data = cached_data
 
