@@ -1,5 +1,4 @@
 from dataclasses import fields
-from typing import get_type_hints
 import pandas as pd
 import geopandas as gpd
 from core import domain, ports
@@ -12,7 +11,7 @@ class Service(ports.Service):
         """Get building data from the repository."""
         return self.building_data_repository.get_all(resource)
     
-    def add_building_data(self, building_profile: domain.BuildingProfile):
+    def add_building_data(self, building_profile: domain.BuildingProfileSummary):
         """Add a building profile to the list of building profiles."""
         self.building_data_repository.add_profile(building_profile)
     
@@ -24,10 +23,23 @@ class Service(ports.Service):
             df = self.building_data_repository.get_all(resource)
             unique_columns = set((list(df.columns) + field_names))    
             df = df.reindex(columns=unique_columns, fill_value='')
-            
-            self.building_data_repository.save(resource, df, to_file=False)
+            self.building_data_repository.save(resource, df, to_file=True)
+    
+    def get_centre_point_of_building(self, resource: domain.BuildingProject,
+                                     building_row: str,
+                                     target_crs ='EPSG:4326') -> tuple[float, float]:
+        """Get the centre point of a building."""
+        gdf = self.building_data_repository.get_all(resource)
+        geometry = gdf.loc[building_row, 'geometry']
+        temp_gdf = gpd.GeoDataFrame(geometry=[geometry], crs=gdf.crs)
+        reprojected_gdf = temp_gdf.to_crs(target_crs)
+        reprojected_geometry = reprojected_gdf.geometry[0]
+        centroid = reprojected_geometry.centroid
+        centroid_coords = (centroid.y, centroid.x)
+    
+        return centroid_coords
         
-    def validate_profile(self, building_profile: domain.BuildingProfile):
+    def validate_profile(self, building_profile: domain.BuildingProfileSummary):
         """Validate a building profile."""
         return True
     

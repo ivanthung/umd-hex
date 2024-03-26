@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
-import geopandas as gpd
 from copy import deepcopy
 from core import ports, domain
-from utils import project_config
 import folium
 from streamlit_folium import st_folium
+from utils import graphics
 
 class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
     """ Streamlit implementation of the building profile interface. Each method loads the building profiles from the cache if it exist."""
@@ -75,14 +74,12 @@ class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
             if(self.service.save(resource, df, to_file=True)):
                 col2.success(f"{resource} saved")
 
-    @st.cache_data(experimental_allow_widgets=True)
     def map(_self, resource: domain.Resource, _map_config: domain.MapConfig):
         """ Shows map of project data"""
         
         match resource: 
             case domain.Resource.BuildingProject:
                 gdf = _self.service.get_building_data(domain.Resource.BuildingProject)
-                gdf = gdf.head(50)
                 m = folium.Map(location = _map_config.geo.location,
                                 zoom_start = _map_config.geo.zoom,
                                 tiles = _map_config.geo.tiles)
@@ -92,5 +89,67 @@ class StreamlitBuildingProfileInterface(ports.BuildingProfileInterface):
                         fields=_map_config.geo.popup_fields,
                     ),
                 ).add_to(m)
-                st_folium(m, use_container_width=True)
+                return st_folium(m, use_container_width=True)
+    
+    def display_building_data_by_map_interaction(self, resource: domain.Resource, map_interaction_data: dict, display_fields = []):
+        """ Display building data based on the map interaction data.
+        Map interaction data is a dict with the last active drawing.
+        Write the building data to the screen.
+        Add a config to determine which fields to show.
+        ToDo: add functionality to save it back to the database.
+        """
+        
+        try:
+            selected_point_id = (
+                map_interaction_data.get("last_active_drawing", {})
+                .get("properties", {})
+                .get("fuuid")
+            )
+            coords = (
+                map_interaction_data.get("last_active_drawing", {})
+                .get("geometry", {})
+                .get("coordinates")
+            )
+        
+        except AttributeError:
+            st.write("Select a building to continue.")
+            return
+        
+        df = self.service.get_building_data(resource)        
+        data = df.loc[df["fuuid"] == selected_point_id].copy()
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.title(selected_point_id[0:8])
+            for i in display_fields:
+                st.write(i, data.iloc[0][i])
             
+            end_use = st.selectbox("Kies de eindbestemming van dit gebouw.",
+                         ['Behouden', 'Transformatie', 'Sloop'])
+            
+            current_profile = st.selectbox("Kies het gebouwprofiel dat het beste bij dit gebouw past.",
+                         ['Gebouw a', 'Gebouw b', 'Gebouw c'])
+            
+            future_profile = st.selectbox("Kies de eindbestemming van dit gebouw.",
+                         ['Gebouw a', 'Gebouw b', 'Gebouw c'])
+            
+            # Update the data.
+            data["end_use"] = end_use
+            data["prof_now"] = current_profile
+            data["prof_fut"] = future_profile
+            
+            # Changw this to the following format: A value is trying to be set on a copy of a slice from a DataFrame.
+            # Try using .loc[row_indexer,col_indexer] = value instead
+            
+
+        with col2:
+            fig = graphics.create_project_shape_diagram(coords)
+            st.pyplot(fig, use_container_width=False)
+        
+        button = st.button("Save changes")
+        if button:
+            df.loc[df["fuuid"] == selected_point_id] = data
+            self.service.save(resource, df, to_file=True)
+            st.success("Changes saved")
+
+

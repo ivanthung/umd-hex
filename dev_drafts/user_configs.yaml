@@ -1,0 +1,20 @@
+# user_config.yaml
+user_id: jpk
+project_types:
+  - web
+  - desktop
+text:
+  - name: Johannes Post Kazerne
+  - contact: jpk@test.test
+firebase:
+  folders:
+    - path: /users/john_doe/projects
+      name: My Projects
+    - path: /users/john_doe/data
+      name: My Data
+local:
+  spatial_data: 
+    - path: data/bag/bag-ams-zuidoost-platdak-buurt.shp
+  building_profiles:
+    - path: umd_mockup_hex/data/gebouwprofielen.xlsx
+

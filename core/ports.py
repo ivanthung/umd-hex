@@ -22,7 +22,7 @@ class DataRepository(ABC):
 
 class Service(ABC):
     @abstractmethod
-    def add_building_data(self, building_profile: domain.BuildingProfile):
+    def add_building_data(self, building_profile: domain.BuildingProfileSummary):
         """Add a building profile to the list of building profiles."""
     
     @abstractmethod
